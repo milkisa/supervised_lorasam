@@ -1,0 +1,13 @@
+results/
+__pycache__/
+*.pyc
+*.pbs
+*.pbs.o
+*.pt
+*.pth
+*.log
+.DS_Store
+runs/
+checkpoints/
+result/
+datasets/
