@@ -44,7 +44,7 @@ def run():
 
     rs_image_fold = rs_bed
     rs_label_fold = rs_bed_gt
-    batch_size_train = 2  # your setting
+    batch_size_train = 1  # your setting
 
     salobj_dataset = SalObjDataset(
         img_name_list=rs_image_fold,
@@ -159,7 +159,7 @@ def run():
     model_dir = '/mnt/data/supervised/sam_lora_dec/'
     os.makedirs(model_dir, exist_ok=True)
 
-    for epoch in range(num_epochs):
+    for epoch in range(num_epochs+1):
         model.train()
         epoch_losses = []
 
@@ -180,7 +180,7 @@ def run():
 
             predicted_masks = nn.functional.interpolate(
                 logits_256 ,
-                size=(1200, 250),
+                size=(1200, 64),
                 mode='bilinear',
                 align_corners=False
             )
@@ -193,7 +193,7 @@ def run():
             loss.backward()
             optimizer.step()
 
-        if epoch % 200 == 0 or epoch == num_epochs - 1:
+        if epoch % 20 == 0 :
             ckpt_path = os.path.join(
                 model_dir, f" greenland_testmultiv_64_{epoch+1}_t{time.time()-start_time:.1f}s.pth"
             )

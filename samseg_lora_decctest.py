@@ -39,18 +39,20 @@ def run():
     k = 0
    # 
     #data = torch.load('/mnt/data/dataset/greenland_250_bestfold_2.pt')
-    """
-    data = torch.load('/mnt/data/dataset/greenland_250multi_v3.pt')
+   
+    data = torch.load('/mnt/data/dataset/greenland_64multi.pt')
     #data = data['test']
-    rs_bed = data['data'].to('cpu').numpy()[500:,]
-    rs_bed_gt = data['label'].to('cpu').numpy()[500:,]
+    rs_bed = data['data'].to('cpu').numpy()[1470:,]
+    rs_bed_gt = data['label'].to('cpu').numpy()[1470:,]
+    print(rs_bed.shape, rs_bed_gt.shape, 'data shapes|||||||||||||||||||||||||||||||||||||||||||||')
+    print(np.unique(rs_bed_gt), 'unique labels|||||||||||||||||||||||||||||||||||||||||||||')
     """
     data = torch.load('/mnt/data/dataset/mc_250_fold_1.pt')
     data= data['test']
     print(data.keys())
     rs_bed = data['bedrock'].to('cpu').numpy()
     rs_bed_gt = data['bed_gt'].to('cpu').numpy()
-   
+    """
 
     rs_image_fold = rs_bed
     rs_label_fold = rs_bed_gt
@@ -98,7 +100,7 @@ def run():
     device = "cuda" if torch.cuda.is_available() else "cpu"
     num_class=5
     seg_head = ASPPHead(in_ch=256, out_ch=num_class).to(device)
-    ckpt = torch.load("/mnt/data/supervised/sam_lora_dec/ greenland_testmultiv2_201_t74439.9s.pth", map_location=device)
+    ckpt = torch.load("/mnt/data/supervised/sam_lora_dec/ greenland_testmultiv_64_21_t22795.8s.pth", map_location=device)
 
     # Load the LoRA encoder weights
     sam.load_state_dict(ckpt["encoder_lora"], strict=False)
@@ -146,7 +148,7 @@ def run():
 
                 predicted_masks = nn.functional.interpolate(
                     logits_256 ,
-                    size=(410, 250),
+                    size=(1200, 64),
                     mode='bilinear',
                     align_corners=False
                 )
@@ -156,7 +158,7 @@ def run():
                 mask = torch.argmax(probs, dim=1)     # [B,H,W] integer mask
                 inputs = nn.functional.interpolate(
                     inputs,
-                    size=(410, 250),
+                    size=(1200, 64),
                     mode='bilinear',
                     align_corners=False
                 )
@@ -166,16 +168,14 @@ def run():
                 rs_pred.append(mask.cpu().numpy().squeeze())
                 rs_lab.append(ground_truth_masks.cpu().numpy().squeeze())
                 
-    
-    print('boxxxxxxxxx')
-    print(np.array(rs_lab).shape, np.array(rs_pred).shape, 'final shapes||||||||||||||||||||||||||||||||||||')
+    print(np.array(rs_pred).shape, np.array(rs_lab).shape, 'final shapes|||||||||||||||||||||||||||||||||||||||||')
+    avg_recall, avg_precision, f1_scores, avg_accuracy, avg_iou, avg_class_oa, average_f1 = calc_metrics(rs_pred, rs_lab)
+    print(f"Average F1 Score: {average_f1:.4f}")
+    print(f"\nOverall Accuracy (including background): {avg_accuracy * 100:.2f}%")
+    for i, (r, p, iou, oa,f1) in enumerate(zip(avg_recall, avg_precision, avg_iou, avg_class_oa,f1_scores)):
+        print(f"Class {i+1}: Recall = {r:.4f}, Precision = {p:.4f}, IoU = {iou:.4f}, OA = {oa:.4f}, F1 Score: {f1:.4f}")
 
-    avg_recall, avg_precision , avg_accuracy ,avg_iou, class_oa    = calc_metrics(np.array(rs_pred)[:,:,:] , np.array(rs_lab)[:,:,:]) 
-    all_fold_recalls.append(avg_recall)
-    all_fold_precisions.append(avg_precision)
-    all_fold_accuracies.append(avg_accuracy)
-     #||||||||||||||||||||||||||||||||||||||||||||overalll |||||||||||||||||||||||||||||||||||||||||||||||||
-    cv_calc(all_fold_recalls,all_fold_precisions,all_fold_accuracies)
+    print('||||||||||||||||||||||||||||||||||||||FOLD||||||||||||||||||||||||||||||')
    
 
 if __name__ == '__main__':
