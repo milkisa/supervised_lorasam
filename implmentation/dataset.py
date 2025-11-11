@@ -33,7 +33,7 @@ def extract_horizontal_patches(data, label, patch_size=64):
 
 def mc10_data_model():
     import pandas as pd
-    data = torch.load('/mnt/data/dataset/antarctica_250multi.pt')
+    data = torch.load('dataset/antarctica_250multi.pt')
     #data = data['test']
     rs_image = data['data'].to('cpu').numpy()
     rs_label = data['label'].to('cpu').numpy()
@@ -75,21 +75,99 @@ def mc10_data_model():
     fold= [folds_1, folds_2, folds_3]
 
 
-    model_dir = ['/mnt/data/supervised/u2net/greenlandsu2net_u2net_fold1_epoch100_valf1_0.9268_time9071.1_20251030-182818.pth',
-        '/mnt/data/supervised/u2net/greenlandsu2net_u2net_fold2_epoch200_valf1_0.9280_time9071.6_20251030-205930.pth',
-        '/mnt/data/supervised/u2net/greenlandsu2net_u2net_fold3_epoch180_valf1_0.9294_time9074.3_20251030-233045.pth'
+    model_dir = ['/mnt/data/supervised/eu/merged_sam_lora_fold1_epoch120_average_loss_0.1668_time302627.2_20251110-221445.pth',
+        #'/mnt/data/supervised/u2net/greenlandsu2net_u2net_fold2_epoch200_valf1_0.9280_time9071.6_20251030-205930.pth',
+       #'/mnt/data/supervised/u2net/greenlandsu2net_u2net_fold3_epoch180_valf1_0.9294_time9074.3_20251030-233045.pth'
                 ]
     return fold[0], model_dir
 
 
+def sharad_manual_data_model():
+    import pandas as pd
+    data = torch.load('/mnt/data/dataset/sharad_250multi.pt')
+    #data = data['test']
+    rs_image = data['data'].to('cpu').numpy()
+    rs_label = data['label'].to('cpu').numpy()
+    """
+    folds = [
+    (np.arange(0, 80), np.arange(80, 97), np.arange(97, 115)),          # First 151 as test set
+    (np.concatenate((np.arange(0, 35), np.arange(70, 115))), np.arange(35, 52), np.arange(52, 70)),  # Middle 151 as test set
+    (np.arange(35, 115), np.arange(0, 17), np.arange(17, 35))        # Last 151 as test set
+    ]
+    """
+    folds = [
+    (np.arange(0, 80), np.arange(80, 97), np.arange(80, 115)),          # First 151 as test set
+    (np.concatenate((np.arange(0, 35), np.arange(70, 115))), np.arange(35, 52), np.arange(35, 70)),  # Middle 151 as test set
+    (np.arange(35, 115), np.arange(0, 17), np.arange(0, 35))        # Last 151 as test set
+    ]
+    patch_size=64
+    folds_1 = []
+    for fold, (train_idx, val_idx, test_idx) in enumerate(folds):
+        #print(f"\nFold {fold + 1}")
+        
+        # Split images and labels into train/test for the current fold
+        train_images, val_images, test_images = rs_image[train_idx], rs_image[val_idx], rs_image[test_idx]
+        train_labels, val_labels,  test_labels = rs_label[train_idx], rs_label[val_idx], rs_label[test_idx]
+        print(f"Fold {fold+1}: Train patches: {train_images.shape}, Val patches: {val_images.shape}, Test patches: {test_images.shape}")
+        
+        tr_img, tr_lab = extract_horizontal_patches(train_images, train_labels, patch_size=patch_size)
+        va_img, va_lab = extract_horizontal_patches(val_images,   val_labels,   patch_size=patch_size)
+        te_img, te_lab = extract_horizontal_patches(test_images,  test_labels,  patch_size=patch_size)
+        print(f"Fold {fold+1}: Train patches: {tr_img.shape}, Val patches: {va_img.shape}, Test patches: {te_img.shape}")
+        folds_1.append({
+            'fold': fold + 1,
+            'train_images': tr_img,  # (M_tr,64,64) or (M_tr,C,64,64)
+            'train_labels': tr_lab,  # (M_tr,64,64)
+            'val_images':   va_img,
+            'val_labels':   va_lab,
+            'test_images':  te_img,
+            'test_labels':  te_lab,
+        })
 
-def mc10_datapatch_model():
+
+    
+    folds_2 = [
+  
+    ]
+    
+    folds_3 = [
+
+    ]
+    fold= [folds_1, folds_2, folds_3]
+
+
+    model_dir = ['/mnt/data/supervised/eu/sharad_manualeu_fold1_epoch2140_valf1_0.8335_time16589.2_20251111-000053.pth',
+        '/mnt/data/supervised/eu/sharad_manualeu_fold2_epoch2700_valf1_0.9315_time16589.2_20251111-043723.pth',
+        '/mnt/data/supervised/eu/sharad_manualeu_fold3_epoch2120_valf1_0.8755_time16588.8_20251111-091351.pth'
+                ]
+    return fold[0], model_dir
+
+def antarctica_datapatch_model():
     import pandas as pd
     data = torch.load('/mnt/data/dataset/antarctica_250multi.pt')
     #data = data['test']
     rs_image = data['data'].to('cpu').numpy()
     rs_label = data['label'].to('cpu').numpy()
-    
+    fold_rs , model_dir = data_rs(rs_image, rs_label)
+    return fold_rs , model_dir
+def greenland_datapatch_model():
+    import pandas as pd
+    data = torch.load('/mnt/data/dataset/greenland_250multi.pt')
+    #data = data['test']
+    rs_image = data['data'].to('cpu').numpy()
+    rs_label = data['label'].to('cpu').numpy()
+    fold_rs , model_dir = data_rs(rs_image, rs_label)
+    return fold_rs , model_dir
+def sharad_datapatch_model():
+    import pandas as pd
+    data = torch.load('/mnt/data/dataset/sharad_250multi.pt')
+    #data = data['test']
+    rs_image = data['data'].to('cpu').numpy()
+    rs_label = data['label'].to('cpu').numpy()
+    fold_rs , model_dir = data_rs(rs_image, rs_label)
+    return fold_rs , model_dir
+def  data_rs(rs_image, rs_label):
+  
     
    # We’ll generate 3 random folds manually
     folds_1 = []
@@ -128,9 +206,8 @@ def mc10_datapatch_model():
     fold= [folds_1, folds_2, folds_3]
 
 
-    model_dir = ['/mnt/data/supervised/u2net/greenlandsu2net_u2net_fold1_epoch100_valf1_0.9268_time9071.1_20251030-182818.pth',
-        '/mnt/data/supervised/u2net/greenlandsu2net_u2net_fold2_epoch200_valf1_0.9280_time9071.6_20251030-205930.pth',
-        '/mnt/data/supervised/u2net/greenlandsu2net_u2net_fold3_epoch180_valf1_0.9294_time9074.3_20251030-233045.pth'
-                ]
+    model_dir = ['/mnt/data/supervised/sam_lora/merged_sam_lora_fold1_epoch120_average_loss_0.1668_time302627.2_20251110-221445.pth',
+        #'/mnt/data/supervised/u2net/greenlandsu2net_u2net_fold2_epoch200_valf1_0.9280_time9071.6_20251030-205930.pth',
+       #'/mnt/data/supervised/u2net/greenlandsu2net_u2net_fold3_epoch180_valf1_0.9294_time9074.3_20251030-233045.pth'
+    ]
     return fold[0], model_dir
-

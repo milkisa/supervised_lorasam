@@ -12,11 +12,12 @@ from torchvision import transforms, utils
 import torch.optim as optim
 from torch.utils.data import Dataset, DataLoader
 import numpy as np
-import monai
+from implmentation.merged import merge_and_resize_folds
 import matplotlib.pyplot as plt
 from data_loader import ToTensorLab,SalObjDataset
 from literature.aspp import UNetASPP
-from implmentation.dataset import mc10_data_model,mc10_datapatch_model
+import monai
+from implmentation.dataset import mc10_data_model,antarctica_datapatch_model,greenland_datapatch_model,sharad_datapatch_model,sharad_manual_data_model
 from implmentation.inputs import parse_args, apply_presets, build_model,muti_bce_loss_fusion, PRESETS
 from samproposed_foldtest import test
 from implmentation.metrics import calc_metrics
@@ -29,12 +30,18 @@ import torchvision.transforms as T
 from sklearn.model_selection import KFold
 seed = 42
 np.random.seed(seed)
-folds, _ = mc10_datapatch_model()
+#folds, _ = antarctica_datapatch_model()
+folds_a, _ = antarctica_datapatch_model()
+folds_g, _ = greenland_datapatch_model()
+folds_s, _ = sharad_manual_data_model()
+merged_folds = merge_and_resize_folds([folds_a, folds_g, folds_s],
+                                      target_h=800, target_w=64,
+                                      shuffle=True, seed=42)
 
-
+print("Total merged folds:", len(merged_folds))
 
 #kf.split(rs_image)
-for fold in folds:
+for fold in merged_folds:
     print(f"\nFold {fold['fold']}")
     
     # Split images and labels into train/test for the current fold
@@ -168,7 +175,7 @@ for fold in folds:
 
             predicted_masks = nn.functional.interpolate(
                 logits_256 ,
-                size=(410, 64),
+                size=(800, 64),
                 mode='bilinear',
                 align_corners=False
             )
@@ -200,7 +207,7 @@ for fold in folds:
                   f"Train Loss: {avg_loss:.4f} "
                   ) 
             ckpt_name = (
-                f"antarctica_{args.model}_fold{fold['fold']}_epoch{epoch}"
+                f"mergedmanuals_{args.model}_fold{fold['fold']}_epoch{epoch}"
                 f"_average_loss_{avg_loss:.4f}_time{time.time()-start_time:.1f}_{timestamp}.pth"
             )
             ckpt_path = os.path.join(save_dir, ckpt_name)

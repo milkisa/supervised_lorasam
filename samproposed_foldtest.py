@@ -33,8 +33,8 @@ from implmentation.metrics import calculate_recall_precision
 from implmentation.metrics import average_recall_precision
 from implmentation.metrics import calc_metrics
 from implmentation.metrics import cv_calc
-
-from implmentation.dataset import mc10_data_model
+from implmentation.merged import merge_and_resize_folds
+from implmentation.dataset import mc10_data_model,antarctica_datapatch_model,greenland_datapatch_model,sharad_datapatch_model
 from implmentation.inputs import parse_args, apply_presets, build_model,muti_bce_loss_fusion, PRESETS
 seed = 42
 np.random.seed(seed)
@@ -62,7 +62,7 @@ def  test(test_salobj_dataloader,  model,seg_head, device, fold, case='test',mod
 
                 predicted_masks = nn.functional.interpolate(
                     logits_256 ,
-                    size=(1200, 64),
+                    size=(800, 64),
                     mode='bilinear',
                     align_corners=False
                 )
@@ -72,7 +72,7 @@ def  test(test_salobj_dataloader,  model,seg_head, device, fold, case='test',mod
                 mask = torch.argmax(probs, dim=1)     # [B,H,W] integer mask
                 inputs = nn.functional.interpolate(
                     inputs,
-                    size=(1200, 64),
+                    size=(800, 64),
                     mode='bilinear',
                     align_corners=False
                 )
@@ -95,27 +95,30 @@ def main():
     all_fold_OAs = []   
 
 
-    rs_image, rs_label, folds, model_dir = mc10_data_model()
+    folds_a, model_dir = antarctica_datapatch_model()
+    folds_g, _ = greenland_datapatch_model()
+    folds_s, _ = sharad_datapatch_model()
+    merged_folds  = merge_and_resize_folds([folds_a, folds_g, folds_s],
+                                        target_h=800, target_w=64,
+                                        shuffle=True, seed=42)
 
     #kf.split(rs_image)
 
-    for fold in folds:
+    for fold in merged_folds:
         print(f"\nFold {fold['fold']}")
         
         # Split images and labels into train/test for the current fold
-        train_images, val_images, test_images = rs_image[fold['train_idx']], rs_image[fold['val_idx']], rs_image[fold['test_idx']]
-        train_labels, val_labels,  test_labels = rs_label[fold['train_idx']], rs_label[fold['val_idx']], rs_label[fold['test_idx']]
-        torch.cuda.empty_cache()
+        train_images, val_images, test_images = fold['train_images'], fold['val_images'], fold['test_images']
+        train_labels, val_labels,  test_labels = fold['train_labels'], fold['val_labels'], fold['test_labels']
 
 
-        rs_image_fold= np.expand_dims(test_images, axis=-1)
-        rs_label_fold= np.expand_dims(test_labels, axis=-1)
+
 
  
 
 
-        test_salobj_dataset = SalObjDataset(img_name_list = rs_image_fold,
-                                            lbl_name_list= rs_label_fold,
+        test_salobj_dataset = SalObjDataset(img_name_list = test_images,
+                                            lbl_name_list= test_labels,
                                             transform=transforms.Compose([
                                             ToTensorLab(flag=0),                # numpy → torch tensor [C,H,W], likely C=1
                                             ResizeInterpolate(size=(1028, 1028))] )

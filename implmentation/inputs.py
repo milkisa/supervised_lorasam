@@ -19,7 +19,7 @@ def parse_args():
     p.add_argument("--model", type=str, default="unetaspp",
                    choices=["aspp", "eu", "unet", "transsounder", "sam_lora"],)
     p.add_argument("--in-ch", type=int, default=1)
-    p.add_argument("--num-classes", type=int, default=5)
+    p.add_argument("--num-classes", type=int, default=6)
 
     # hyperparams (None means “use model preset”)
     p.add_argument("--lr", type=float, default=None)
@@ -106,7 +106,7 @@ PRESETS = {
         "model_dir": "/mnt/data/supervised/transsounder/"
     },
     "sam_lora": {
-    "epochs": 100,
+    "epochs": 200,
     "batch_size_train": 1,
     "model_dir": "/mnt/data/supervised/sam_lora/"
     },
@@ -164,7 +164,7 @@ def lora_sam():
 
         # Lightweight, promptless segmentation head
         device = "cuda" if torch.cuda.is_available() else "cpu"
-        num_class=5
+        num_class=6
         seg_head = ASPPHead(in_ch=256, out_ch=num_class).to(device)
         return model, seg_head
 model, seg_head = lora_sam()

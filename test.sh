@@ -1,1 +1,1 @@
-docker run --gpus all --name milkisa --ipc=host --ulimit memlock=-1 --ulimit stack=67108864 --rm -t -u $(id -u):$(id -g) -v $(pwd):$(pwd) -v /media/datapart/milkisa:/mnt/data -w $(pwd) milkisa/milko python /home/milkisayebasse/supervised_proposed/samproposed_foldtrain.py --model sam_lora 
+docker run --gpus all --name milkisa --ipc=host --ulimit memlock=-1 --ulimit stack=67108864 --rm -t -u $(id -u):$(id -g) -v $(pwd):$(pwd) -v /media/faststorage/milkisa:/mnt/data -w $(pwd) milkisa/milko python /home/milkisayebasse/supervised_samlora/samproposed_foldtrain.py --model sam_lora 
