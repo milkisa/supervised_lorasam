@@ -36,7 +36,7 @@ folds_g, _ = greenland_datapatch_model()
 folds_s, _ = sharad_manual_data_model()
 merged_folds = merge_and_resize_folds([folds_a, folds_g, folds_s],
                                       target_h=800, target_w=64,
-                                      shuffle=True, seed=42)
+                                      shuffle=False, seed=42)
 
 print("Total merged folds:", len(merged_folds))
 

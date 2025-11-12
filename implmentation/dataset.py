@@ -30,58 +30,6 @@ def extract_horizontal_patches(data, label, patch_size=64):
     data_patches= np.expand_dims(data_patches, axis=-1)
     label_patches = np.expand_dims(label_patches, axis=-1)
     return data_patches, label_patches
-
-def mc10_data_model():
-    import pandas as pd
-    data = torch.load('dataset/antarctica_250multi.pt')
-    #data = data['test']
-    rs_image = data['data'].to('cpu').numpy()
-    rs_label = data['label'].to('cpu').numpy()
-    
-    
-   # We’ll generate 3 random folds manually
-    folds_1 = []
-    
-    n_samples = rs_image.shape[0]
-    indices = np.arange(n_samples)
-
-    for i in range(3):
-        # Randomly shuffle and split into train (70%), val (15%), test (15%)
-        train_idx, temp_idx = train_test_split(indices, test_size=0.3, random_state=seed + i)
-        val_idx, test_idx = train_test_split(temp_idx, test_size=0.5, random_state=seed + i)
-
-        tr_img, va_img, te_img= rs_image[train_idx], rs_image[val_idx], rs_image[test_idx]
-        tr_lab, va_lab,  te_lab = rs_label[train_idx], rs_label[val_idx], rs_label[test_idx]
-        print(f"Fold {i+1}: Train patches: {tr_img.shape}, Val patches: {va_img.shape}, Test patches: {te_img.shape}")
-        folds_1.append({
-            'fold': i + 1,
-            'train_images': tr_img,  # (M_tr,64,64) or (M_tr,C,64,64) 
-            'train_labels': tr_lab,  # (M_tr,64,64)
-            'val_images':   va_img,
-            'val_labels':   va_lab,
-            'test_images':  te_img,
-            'test_labels':  te_lab,
-        })
-
-
-    
-    folds_2 = [
-  
-    ]
-    
-    folds_3 = [
-
-    ]
-    fold= [folds_1, folds_2, folds_3]
-
-
-    model_dir = ['/mnt/data/supervised/eu/merged_sam_lora_fold1_epoch120_average_loss_0.1668_time302627.2_20251110-221445.pth',
-        #'/mnt/data/supervised/u2net/greenlandsu2net_u2net_fold2_epoch200_valf1_0.9280_time9071.6_20251030-205930.pth',
-       #'/mnt/data/supervised/u2net/greenlandsu2net_u2net_fold3_epoch180_valf1_0.9294_time9074.3_20251030-233045.pth'
-                ]
-    return fold[0], model_dir
-
-
 def sharad_manual_data_model():
     import pandas as pd
     data = torch.load('/mnt/data/dataset/sharad_250multi.pt')
@@ -141,6 +89,58 @@ def sharad_manual_data_model():
         '/mnt/data/supervised/eu/sharad_manualeu_fold3_epoch2120_valf1_0.8755_time16588.8_20251111-091351.pth'
                 ]
     return fold[0], model_dir
+def mc10_data_model():
+    import pandas as pd
+    data = torch.load('/mnt/data/dataset/antarctica_250multi.pt')
+    #data = data['test']
+    rs_image = data['data'].to('cpu').numpy()
+    rs_label = data['label'].to('cpu').numpy()
+    
+    
+   # We’ll generate 3 random folds manually
+    folds_1 = []
+    
+    n_samples = rs_image.shape[0]
+    indices = np.arange(n_samples)
+
+    for i in range(3):
+        # Randomly shuffle and split into train (70%), val (15%), test (15%)
+        train_idx, temp_idx = train_test_split(indices, test_size=0.3, random_state=seed + i)
+        val_idx, test_idx = train_test_split(temp_idx, test_size=0.5, random_state=seed + i)
+
+        tr_img, va_img, te_img= rs_image[train_idx], rs_image[val_idx], rs_image[test_idx]
+        tr_lab, va_lab,  te_lab = rs_label[train_idx], rs_label[val_idx], rs_label[test_idx]
+        print(f"Fold {i+1}: Train patches: {tr_img.shape}, Val patches: {va_img.shape}, Test patches: {te_img.shape}")
+        folds_1.append({
+            'fold': i + 1,
+            'train_images': tr_img,  # (M_tr,64,64) or (M_tr,C,64,64) 
+            'train_labels': tr_lab,  # (M_tr,64,64)
+            'val_images':   va_img,
+            'val_labels':   va_lab,
+            'test_images':  te_img,
+            'test_labels':  te_lab,
+        })
+
+
+    
+    folds_2 = [
+  
+    ]
+    
+    folds_3 = [
+
+    ]
+    fold= [folds_1, folds_2, folds_3]
+
+
+    model_dir = ['/mnt/data/supervised/u2net/greenlandsu2net_u2net_fold1_epoch100_valf1_0.9268_time9071.1_20251030-182818.pth',
+        '/mnt/data/supervised/u2net/greenlandsu2net_u2net_fold2_epoch200_valf1_0.9280_time9071.6_20251030-205930.pth',
+        '/mnt/data/supervised/u2net/greenlandsu2net_u2net_fold3_epoch180_valf1_0.9294_time9074.3_20251030-233045.pth'
+                ]
+    return fold[0], model_dir
+
+
+        
 
 def antarctica_datapatch_model():
     import pandas as pd
@@ -148,7 +148,8 @@ def antarctica_datapatch_model():
     #data = data['test']
     rs_image = data['data'].to('cpu').numpy()
     rs_label = data['label'].to('cpu').numpy()
-    fold_rs , model_dir = data_rs(rs_image, rs_label)
+    print(rs_image[:100].shape, rs_label.shape, 'antarctica data')
+    fold_rs , model_dir = data_rs(rs_image[:120], rs_label[:120])
     return fold_rs , model_dir
 def greenland_datapatch_model():
     import pandas as pd
@@ -156,7 +157,8 @@ def greenland_datapatch_model():
     #data = data['test']
     rs_image = data['data'].to('cpu').numpy()
     rs_label = data['label'].to('cpu').numpy()
-    fold_rs , model_dir = data_rs(rs_image, rs_label)
+    print(rs_image.shape, rs_label.shape, 'greenland data')
+    fold_rs , model_dir =  data_rs(rs_image[:120], rs_label[:120])
     return fold_rs , model_dir
 def sharad_datapatch_model():
     import pandas as pd
@@ -206,8 +208,8 @@ def  data_rs(rs_image, rs_label):
     fold= [folds_1, folds_2, folds_3]
 
 
-    model_dir = ['/mnt/data/supervised/sam_lora/merged_sam_lora_fold1_epoch120_average_loss_0.1668_time302627.2_20251110-221445.pth',
-        #'/mnt/data/supervised/u2net/greenlandsu2net_u2net_fold2_epoch200_valf1_0.9280_time9071.6_20251030-205930.pth',
-       #'/mnt/data/supervised/u2net/greenlandsu2net_u2net_fold3_epoch180_valf1_0.9294_time9074.3_20251030-233045.pth'
-    ]
+    model_dir = ['/mnt/data/supervised/aspp/antarctica_longer_aspp_fold1_epoch120_valf1_0.9476_time875.7_20251107-130135.pth',
+        '/mnt/data/supervised/aspp/antarctica_longer_aspp_fold2_epoch80_valf1_0.9389_time879.2_20251107-131614.pth',
+        '/mnt/data/supervised/aspp/antarctica_longer_aspp_fold3_epoch100_valf1_0.9242_time871.3_20251107-133046.pth'
+                ]
     return fold[0], model_dir

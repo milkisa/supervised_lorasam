@@ -17,7 +17,7 @@ def resize_array(arr, target_h=800, target_w=64, order=1):
         arr_resized.append(img_r)
     return np.array(arr_resized, dtype=np.float32)
 
-def merge_and_resize_folds(folds_list, target_h=800, target_w=64, shuffle=True, seed=42):
+def merge_and_resize_folds(folds_list, target_h=800, target_w=64, shuffle=False, seed=42):
     """
     Merge multiple fold sets (e.g., Antarctica, Greenland, SHARAD)
     and resize all to (target_h, target_w).
